@@ -17,8 +17,11 @@ class WIMWHomeVC: UIViewController {
         configureViewController()
         configureTableView()
         configureSearchController()
-        
-        
+    }
+    
+    
+    override func viewWillAppear(_ animated: Bool) {
+        getOutages()
     }
     
     
@@ -32,8 +35,10 @@ class WIMWHomeVC: UIViewController {
     func configureTableView() {
         view.addSubview(tableView)
         tableView.frame = view.bounds
+        tableView.rowHeight = 80
         tableView.delegate = self
         tableView.dataSource = self
+        tableView.register(WIMWOutageCell.self, forCellReuseIdentifier: WIMWOutageCell.reuseID)
     }
     
     
@@ -47,21 +52,23 @@ class WIMWHomeVC: UIViewController {
     }
     
     
-    func getOutages(completion: @escaping([Outage]) -> Void) {
+    func getOutages() {
         NetworkManager.shared.getWaterOutages { [weak self] result in
             guard let self = self else {return}
            
             switch result {
             case.success(let outages):
-                self.outages = outages
-                self.tableView.reloadData()
+                DispatchQueue.main.async {
+                    self.outages = outages
+                    self.tableView.reloadData()
+                }
             case.failure(let error):
-                print("Kesinti bilgisi bulunamadı.")
+                let alert = UIAlertController(title: "Error", message: error.localizedDescription,preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "OK", style: .default))
+                self.present(alert, animated: true)
             }
         }
     }
-
-
 }
 
 
@@ -71,10 +78,22 @@ extension WIMWHomeVC: UITableViewDelegate, UITableViewDataSource {
         return outages.count
     }
     
+    
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        return UITableViewCell()
+        let cell = tableView.dequeueReusableCell(withIdentifier: WIMWOutageCell.reuseID, for: indexPath) as! WIMWOutageCell
+        let outage = outages[indexPath.row]
+        print(outage.Mahalleler)
+        cell.set(outage: outage)
+        
+        return cell
     }
     
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let outage = outages[indexPath.row]
+        let destVC = WIMWOutageDetailVC(outage: outage)
+        navigationController?.pushViewController(destVC, animated: true)
+    }
     
 }
 
