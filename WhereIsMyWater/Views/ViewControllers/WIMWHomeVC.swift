@@ -82,7 +82,6 @@ extension WIMWHomeVC: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: WIMWOutageCell.reuseID, for: indexPath) as! WIMWOutageCell
         let outage = outages[indexPath.row]
-        print(outage.Mahalleler)
         cell.set(outage: outage)
         
         return cell

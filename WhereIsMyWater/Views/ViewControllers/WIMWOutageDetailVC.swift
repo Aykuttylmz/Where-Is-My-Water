@@ -17,11 +17,26 @@ class WIMWOutageDetailVC: UIViewController {
     let districtLabel = UILabel()
     let neighborhoodsLabel = UILabel()
     let dateLabel = UILabel()
-    let descriptionLabel = UILabel()
-    
-    let collectionView = UICollectionView()
-    
     var neighborhoodsArray: [String] = []
+    
+    let descriptionLabel: UILabel = {
+        let label = UILabel()
+        label.numberOfLines = 0
+        return label
+    }()
+
+    
+    let collectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.minimumInteritemSpacing = 1
+        layout.scrollDirection = .horizontal
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.showsHorizontalScrollIndicator = false
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        collectionView.backgroundColor = .blue
+        return collectionView
+    }()
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -45,17 +60,9 @@ class WIMWOutageDetailVC: UIViewController {
     
     
     func configureCollectionView() {
-        let layout = UICollectionViewFlowLayout()
-        layout.minimumInteritemSpacing = 8
-        layout.estimatedItemSize = UICollectionViewFlowLayout.automaticSize
-        collectionView.collectionViewLayout = layout
-    
-        collectionView.showsHorizontalScrollIndicator = false
         collectionView.delegate = self
         collectionView.dataSource = self
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
         collectionView.register(WIMWNeighborhoodCell.self, forCellWithReuseIdentifier: WIMWNeighborhoodCell.reuseID )
-        collectionView.heightAnchor.constraint(equalToConstant: 80).isActive = true
         
     }
     
@@ -64,10 +71,13 @@ class WIMWOutageDetailVC: UIViewController {
         verticalStackView.axis = .vertical
         verticalStackView.spacing = 16
         verticalStackView.distribution = .fill
+        verticalStackView.backgroundColor = .gray
+        verticalStackView.layer.cornerRadius = 20
+        verticalStackView.translatesAutoresizingMaskIntoConstraints = false
         
         horizontalStackView.axis = .horizontal
         horizontalStackView.spacing = 8
-        horizontalStackView.distribution = .fillEqually
+        horizontalStackView.distribution = .equalSpacing
         horizontalStackView.addArrangedSubview(districtLabel)
         horizontalStackView.addArrangedSubview(dateLabel)
         
@@ -76,26 +86,53 @@ class WIMWOutageDetailVC: UIViewController {
         verticalStackView.addArrangedSubview(descriptionLabel)
         
         view.addSubview(verticalStackView)
-        verticalStackView.translatesAutoresizingMaskIntoConstraints = false
     }
     
     
     func configureUI() {
         
-        let padding: CGFloat = 16
+        let padding: CGFloat = 8
         
         NSLayoutConstraint.activate([
-            verticalStackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
-            verticalStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: padding),
-            verticalStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -padding),
-            verticalStackView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -padding)
+            verticalStackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            verticalStackView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: padding),
+            verticalStackView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -padding),
+            verticalStackView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -padding),
+            
+            self.collectionView.heightAnchor.constraint(equalToConstant: 50),
+            self.collectionView.leadingAnchor.constraint(equalTo: verticalStackView.leadingAnchor),
+            self.collectionView.trailingAnchor.constraint(equalTo: verticalStackView.trailingAnchor),
+            
+            horizontalStackView.leadingAnchor.constraint(equalTo: verticalStackView.leadingAnchor, constant: padding),
+            horizontalStackView.trailingAnchor.constraint(equalTo: verticalStackView.trailingAnchor, constant: -padding),
+            horizontalStackView.heightAnchor.constraint(equalToConstant: 50)
         ])
         
+        let formattedDate = formatDate(date: outage.KesintiTarihi)
+        districtLabel.font = UIFont.boldSystemFont(ofSize: 20)
         districtLabel.text = outage.IlceAdi
-        dateLabel.text = outage.KesintiTarihi
+        dateLabel.text = "Kesinti tarihi: \(formattedDate)"
         descriptionLabel.text = outage.Aciklama
         
     }
+    
+    
+    func formatDate(date: String) -> String {
+        let inputDateFormatter = DateFormatter()
+        inputDateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        inputDateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        inputDateFormatter.timeZone = .current
+        
+        if let date = inputDateFormatter.date(from: date) {
+            let outputDateFormatter = DateFormatter()
+            outputDateFormatter.dateFormat = "yyyy-MM-dd HH:mm"
+            return outputDateFormatter.string(from: date)
+        } else {
+            return "N/A"
+        }
+    }
+    
+    
 }
 
 
