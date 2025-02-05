@@ -11,29 +11,25 @@ class WIMWOutageDetailVC: UIViewController {
     
     var outage: Outage
     
-    let verticalStackView = UIStackView()
-    let horizontalStackView = UIStackView()
-    
-    let districtLabel = UILabel()
-    let neighborhoodsLabel = UILabel()
     let dateLabel = UILabel()
-    var neighborhoodsArray: [String] = []
+    lazy var neighborhoodsArray = outage.Mahalleler.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces)}
     
-    let descriptionLabel: UILabel = {
+    var descriptionLabel: UILabel = {
         let label = UILabel()
         label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
 
     
     let collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
-        layout.minimumInteritemSpacing = 1
+        layout.minimumInteritemSpacing = -10
         layout.scrollDirection = .horizontal
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.translatesAutoresizingMaskIntoConstraints = false
-        collectionView.backgroundColor = .blue
+        collectionView.backgroundColor = .systemBackground
         return collectionView
     }()
     
@@ -41,9 +37,8 @@ class WIMWOutageDetailVC: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
-        neighborhoodsArray = outage.Mahalleler.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces)}
+        title = outage.IlceAdi.capitalized
         configureCollectionView()
-        configureStackView()
         configureUI()
     }
     
@@ -67,69 +62,37 @@ class WIMWOutageDetailVC: UIViewController {
     }
     
     
-    func configureStackView() {
-        verticalStackView.axis = .vertical
-        verticalStackView.spacing = 16
-        verticalStackView.distribution = .fill
-        verticalStackView.backgroundColor = .gray
-        verticalStackView.layer.cornerRadius = 20
-        verticalStackView.translatesAutoresizingMaskIntoConstraints = false
-        
-        horizontalStackView.axis = .horizontal
-        horizontalStackView.spacing = 8
-        horizontalStackView.distribution = .equalSpacing
-        horizontalStackView.addArrangedSubview(districtLabel)
-        horizontalStackView.addArrangedSubview(dateLabel)
-        
-        verticalStackView.addArrangedSubview(horizontalStackView)
-        verticalStackView.addArrangedSubview(collectionView)
-        verticalStackView.addArrangedSubview(descriptionLabel)
-        
-        view.addSubview(verticalStackView)
-    }
-    
-    
     func configureUI() {
         
-        let padding: CGFloat = 8
+        view.addSubview(collectionView)
+        view.addSubview(dateLabel)
+        view.addSubview(descriptionLabel)
         
+        let padding: CGFloat = 16
+
         NSLayoutConstraint.activate([
-            verticalStackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            verticalStackView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: padding),
-            verticalStackView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -padding),
-            verticalStackView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -padding),
+            collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: padding),
+            collectionView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: padding),
+            collectionView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -padding),
+            collectionView.heightAnchor.constraint(equalToConstant: 60),
             
-            self.collectionView.heightAnchor.constraint(equalToConstant: 50),
-            self.collectionView.leadingAnchor.constraint(equalTo: verticalStackView.leadingAnchor),
-            self.collectionView.trailingAnchor.constraint(equalTo: verticalStackView.trailingAnchor),
+            dateLabel.topAnchor.constraint(equalTo: collectionView.bottomAnchor, constant: padding),
+            dateLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: padding),
+            dateLabel.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -padding),
+            dateLabel.heightAnchor.constraint(equalToConstant: 40),
             
-            horizontalStackView.leadingAnchor.constraint(equalTo: verticalStackView.leadingAnchor, constant: padding),
-            horizontalStackView.trailingAnchor.constraint(equalTo: verticalStackView.trailingAnchor, constant: -padding),
-            horizontalStackView.heightAnchor.constraint(equalToConstant: 50)
+            descriptionLabel.topAnchor.constraint(equalTo: dateLabel.bottomAnchor, constant: padding),
+            descriptionLabel.leadingAnchor.constraint(equalTo: dateLabel.leadingAnchor),
+            descriptionLabel.trailingAnchor.constraint(equalTo: dateLabel.trailingAnchor),
+            
+           
         ])
         
-        let formattedDate = formatDate(date: outage.KesintiTarihi)
-        districtLabel.font = UIFont.boldSystemFont(ofSize: 20)
-        districtLabel.text = outage.IlceAdi
+        let formattedDate = outage.KesintiTarihi.formatDate()
         dateLabel.text = "Kesinti tarihi: \(formattedDate)"
-        descriptionLabel.text = outage.Aciklama
+        dateLabel.translatesAutoresizingMaskIntoConstraints = false
         
-    }
-    
-    
-    func formatDate(date: String) -> String {
-        let inputDateFormatter = DateFormatter()
-        inputDateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-        inputDateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        inputDateFormatter.timeZone = .current
-        
-        if let date = inputDateFormatter.date(from: date) {
-            let outputDateFormatter = DateFormatter()
-            outputDateFormatter.dateFormat = "yyyy-MM-dd HH:mm"
-            return outputDateFormatter.string(from: date)
-        } else {
-            return "N/A"
-        }
+        descriptionLabel.text = outage.Aciklama.lowercased().capitalizeFirstLetter()
     }
     
     
