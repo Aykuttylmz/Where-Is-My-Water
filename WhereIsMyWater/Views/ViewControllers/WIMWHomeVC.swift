@@ -10,7 +10,9 @@ import UIKit
 class WIMWHomeVC: UIViewController {
     
     let tableView = UITableView()
-    private var outages = [Outage]()
+    var outages = [Outage]()
+    var filteredOutages = [Outage]()
+    var isSearching = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -69,6 +71,11 @@ class WIMWHomeVC: UIViewController {
             }
         }
     }
+    
+    
+    func updateDate(on outages: [Outage]) {
+        
+    }
 }
 
 
@@ -91,7 +98,8 @@ extension WIMWHomeVC: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let outage = outages[indexPath.row]
         let destVC = WIMWOutageDetailVC(outage: outage)
-        navigationController?.pushViewController(destVC, animated: true)
+        let navController = UINavigationController(rootViewController: destVC)
+        present(navController, animated: true)
     }
     
 }
@@ -100,6 +108,13 @@ extension WIMWHomeVC: UITableViewDelegate, UITableViewDataSource {
 extension WIMWHomeVC : UISearchResultsUpdating, UISearchBarDelegate {
     
     func updateSearchResults(for searchController: UISearchController) {
+        guard let filter = searchController.searchBar.text else { return }
+        isSearching = true
+        filteredOutages = outages.filter({ $0.Mahalleler.lowercased().contains(filter.lowercased())})
+        
+        
+        
+        
         
     }
     

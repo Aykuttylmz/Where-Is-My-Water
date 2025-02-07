@@ -22,6 +22,7 @@ class WIMWOutageCell: UITableViewCell {
     let outageImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "drop.degreesign.slash.fill")
+        imageView.layer.cornerRadius = 10
         imageView.tintColor = .systemOrange
         return imageView
     }()

@@ -11,6 +11,7 @@ class WIMWOutageDetailVC: UIViewController {
     
     var outage: Outage
     
+    let stackView = UIStackView()
     let dateLabel = UILabel()
     lazy var neighborhoodsArray = outage.Mahalleler.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces)}
     
@@ -36,9 +37,9 @@ class WIMWOutageDetailVC: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemBackground
-        title = outage.IlceAdi.capitalized
         configureCollectionView()
+        configureStackView()
+        configureViewController()
         configureUI()
     }
     
@@ -54,7 +55,43 @@ class WIMWOutageDetailVC: UIViewController {
     }
     
     
+    func configureViewController() {
+        title = outage.IlceAdi.capitalized
+        view.backgroundColor = .systemBackground
+        let doneButton = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(dismissVC))
+        navigationItem.rightBarButtonItem = doneButton
+        navigationController?.navigationBar.prefersLargeTitles = true
+        
+    }
+    
+    
+    @objc func dismissVC() {
+        dismiss(animated: true)
+    }
+    
+    
+    func configureStackView() {
+        view.addSubview(stackView)
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        dateLabel.translatesAutoresizingMaskIntoConstraints = false
+        stackView.isLayoutMarginsRelativeArrangement = true
+        stackView.layoutMargins = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+        stackView.axis = .vertical
+        stackView.backgroundColor = .systemBackground
+        stackView.distribution = .fillProportionally
+        stackView.layer.cornerRadius = 5
+        stackView.layer.borderWidth = 2
+        stackView.layer.borderColor = UIColor.black.cgColor
+        stackView.clipsToBounds = true
+        stackView.addArrangedSubview(dateLabel)
+        stackView.addArrangedSubview(descriptionLabel)
+        stackView.setContentHuggingPriority(.defaultHigh, for: .vertical)
+        stackView.setCustomSpacing(10, after: dateLabel)
+    }
+    
+    
     func configureCollectionView() {
+        view.addSubview(collectionView)
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.register(WIMWNeighborhoodCell.self, forCellWithReuseIdentifier: WIMWNeighborhoodCell.reuseID )
@@ -64,10 +101,6 @@ class WIMWOutageDetailVC: UIViewController {
     
     func configureUI() {
         
-        view.addSubview(collectionView)
-        view.addSubview(dateLabel)
-        view.addSubview(descriptionLabel)
-        
         let padding: CGFloat = 16
 
         NSLayoutConstraint.activate([
@@ -76,25 +109,17 @@ class WIMWOutageDetailVC: UIViewController {
             collectionView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -padding),
             collectionView.heightAnchor.constraint(equalToConstant: 60),
             
-            dateLabel.topAnchor.constraint(equalTo: collectionView.bottomAnchor, constant: padding),
-            dateLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: padding),
-            dateLabel.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -padding),
-            dateLabel.heightAnchor.constraint(equalToConstant: 40),
-            
-            descriptionLabel.topAnchor.constraint(equalTo: dateLabel.bottomAnchor, constant: padding),
-            descriptionLabel.leadingAnchor.constraint(equalTo: dateLabel.leadingAnchor),
-            descriptionLabel.trailingAnchor.constraint(equalTo: dateLabel.trailingAnchor),
-            
-           
+            stackView.topAnchor.constraint(equalTo: collectionView.bottomAnchor, constant: padding),
+            stackView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: padding),
+            stackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -padding),
         ])
         
         let formattedDate = outage.KesintiTarihi.formatDate()
         dateLabel.text = "Kesinti tarihi: \(formattedDate)"
         dateLabel.translatesAutoresizingMaskIntoConstraints = false
         
-        descriptionLabel.text = outage.Aciklama.lowercased().capitalizeFirstLetter()
+        descriptionLabel.text = "Açıklama: \n \(outage.Aciklama.lowercased().capitalizeFirstLetter()) "
     }
-    
     
 }
 
