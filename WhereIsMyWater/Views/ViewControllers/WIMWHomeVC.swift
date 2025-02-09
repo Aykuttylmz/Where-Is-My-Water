@@ -9,16 +9,25 @@ import UIKit
 
 class WIMWHomeVC: UIViewController {
     
+    
+    enum Section {
+        case main
+    }
+    
+    
     let tableView = UITableView()
-    var outages = [Outage]()
-    var filteredOutages = [Outage]()
+    var outages: [Outage] = []
+    var filteredOutages: [Outage] = []
     var isSearching = false
+    var dataSource: UITableViewDiffableDataSource<Section, Outage>!
 
     override func viewDidLoad() {
         super.viewDidLoad()
         configureViewController()
         configureTableView()
+        configureDataSource()
         configureSearchController()
+        
     }
     
     
@@ -33,13 +42,23 @@ class WIMWHomeVC: UIViewController {
         navigationController?.navigationBar.prefersLargeTitles = true
     }
     
+    //MARK: Configure data source
+    func configureDataSource() {
+        dataSource = UITableViewDiffableDataSource<Section, Outage>(tableView: tableView, cellProvider: { tableView, indexPath, outage in
+            let cell = tableView.dequeueReusableCell(withIdentifier: WIMWOutageCell.reuseID, for: indexPath) as! WIMWOutageCell
+            cell.set(outage: outage)
+            return cell
+            
+        })
+    }
+
+    
     
     func configureTableView() {
         view.addSubview(tableView)
         tableView.frame = view.bounds
         tableView.rowHeight = 80
         tableView.delegate = self
-        tableView.dataSource = self
         tableView.register(WIMWOutageCell.self, forCellReuseIdentifier: WIMWOutageCell.reuseID)
     }
     
@@ -62,7 +81,7 @@ class WIMWHomeVC: UIViewController {
             case.success(let outages):
                 DispatchQueue.main.async {
                     self.outages = outages
-                    self.tableView.reloadData()
+                    self.updateData(on: outages)
                 }
             case.failure(let error):
                 let alert = UIAlertController(title: "Error", message: error.localizedDescription,preferredStyle: .alert)
@@ -73,30 +92,21 @@ class WIMWHomeVC: UIViewController {
     }
     
     
-    func updateDate(on outages: [Outage]) {
-        
+    func updateData(on outages: [Outage]) {
+        var snapshot = NSDiffableDataSourceSnapshot<Section,Outage>()
+        snapshot.appendSections([.main])
+        snapshot.appendItems(outages)
+        DispatchQueue.main.async {
+            self.dataSource?.apply(snapshot,animatingDifferences: true)
+        }
     }
 }
 
 
-extension WIMWHomeVC: UITableViewDelegate, UITableViewDataSource {
+extension WIMWHomeVC: UITableViewDelegate {
    
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return outages.count
-    }
-    
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: WIMWOutageCell.reuseID, for: indexPath) as! WIMWOutageCell
-        let outage = outages[indexPath.row]
-        cell.set(outage: outage)
-        
-        return cell
-    }
-    
-    
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let outage = outages[indexPath.row]
+        guard let outage = dataSource.itemIdentifier(for: indexPath) else {return}
         let destVC = WIMWOutageDetailVC(outage: outage)
         let navController = UINavigationController(rootViewController: destVC)
         present(navController, animated: true)
@@ -108,14 +118,17 @@ extension WIMWHomeVC: UITableViewDelegate, UITableViewDataSource {
 extension WIMWHomeVC : UISearchResultsUpdating, UISearchBarDelegate {
     
     func updateSearchResults(for searchController: UISearchController) {
-        guard let filter = searchController.searchBar.text else { return }
+        guard let query = searchController.searchBar.text else { return }
         isSearching = true
-        filteredOutages = outages.filter({ $0.Mahalleler.lowercased().contains(filter.lowercased())})
-        
-        
-        
-        
-        
+        filteredOutages = outages.filter({ $0.Mahalleler.lowercased().contains(query.lowercased())})
+        updateData(on: filteredOutages)
+    }
+    
+    
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        isSearching = false
+        //updateData(on: outages)
+        getOutages()
     }
     
 

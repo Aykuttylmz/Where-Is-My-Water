@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Outage: Codable {
+struct Outage: Codable, Hashable {
     let KesintiTarihi, Aciklama, IlceAdi: String
     let MahalleID: [Int]
     let Mahalleler, Tip, ArizaGiderilmeTarihi: String
