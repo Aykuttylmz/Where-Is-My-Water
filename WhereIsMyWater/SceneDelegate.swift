@@ -16,7 +16,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         configureNavigationBar()
         window = UIWindow(frame:windowScene.coordinateSpace.bounds)
         window?.windowScene = windowScene
-        let navController = UINavigationController(rootViewController: WIMWHomeVC())
+        let navController = UINavigationController(rootViewController: WIMWHomeViewController(viewModel: WIMWHomeViewModel(networkService: NetworkManager())))
         window?.rootViewController = navController
         window?.makeKeyAndVisible()
     }

@@ -6,35 +6,43 @@
 //
 
 import UIKit
+import Combine
 
-class WIMWHomeVC: UIViewController {
-    
+class WIMWHomeViewController: UIViewController {
     
     enum Section {
         case main
     }
     
-    
-    let tableView = UITableView()
-    var outages: [Outage] = []
-    var filteredOutages: [Outage] = []
-    var isSearching = false
-    var dataSource: UITableViewDiffableDataSource<Section, Outage>!
+    private let tableView = UITableView()
+    private var isSearching = false
+    private var dataSource: UITableViewDiffableDataSource<Section, Outage>!
+    private var viewModel: WIMWHomeViewModelProtocol
+    private var cancellables: Set<AnyCancellable> = []
 
+    
+    init(viewModel: WIMWHomeViewModelProtocol) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         configureViewController()
         configureTableView()
         configureDataSource()
         configureSearchController()
-        
+        setupBindings()
     }
-    
     
     override func viewWillAppear(_ animated: Bool) {
         getOutages()
     }
-    
     
     func configureViewController() {
         view.backgroundColor = .systemBackground
@@ -51,7 +59,6 @@ class WIMWHomeVC: UIViewController {
             
         })
     }
-
     
     
     func configureTableView() {
@@ -74,21 +81,7 @@ class WIMWHomeVC: UIViewController {
     
     
     func getOutages() {
-        NetworkManager.shared.getWaterOutages { [weak self] result in
-            guard let self = self else {return}
-           
-            switch result {
-            case.success(let outages):
-                DispatchQueue.main.async {
-                    self.outages = outages
-                    self.updateData(on: outages)
-                }
-            case.failure(let error):
-                let alert = UIAlertController(title: "Error", message: error.localizedDescription,preferredStyle: .alert)
-                alert.addAction(UIAlertAction(title: "OK", style: .default))
-                self.present(alert, animated: true)
-            }
-        }
+        viewModel.fetchOutages()
     }
     
     
@@ -100,13 +93,23 @@ class WIMWHomeVC: UIViewController {
             self.dataSource?.apply(snapshot,animatingDifferences: true)
         }
     }
+    
+    
+    func setupBindings() {
+        (viewModel as? WIMWHomeViewModel)?
+            .$outages
+            .sink{ [weak self] outages in
+                self?.updateData(on: outages)
+            }
+            .store(in: &cancellables)
+    }
 }
 
 
-extension WIMWHomeVC: UITableViewDelegate {
+extension WIMWHomeViewController: UITableViewDelegate {
    
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        guard let outage = dataSource.itemIdentifier(for: indexPath) else {return}
+        guard let outage = dataSource.itemIdentifier(for: indexPath) else { return }
         let destVC = WIMWOutageDetailVC(outage: outage)
         let navController = UINavigationController(rootViewController: destVC)
         present(navController, animated: true)
@@ -115,19 +118,24 @@ extension WIMWHomeVC: UITableViewDelegate {
 }
 
 
-extension WIMWHomeVC : UISearchResultsUpdating, UISearchBarDelegate {
+extension WIMWHomeViewController : UISearchResultsUpdating, UISearchBarDelegate {
     
     func updateSearchResults(for searchController: UISearchController) {
-        guard let query = searchController.searchBar.text else { return }
+        
+        guard let query = searchController.searchBar.text, !query.isEmpty else {
+            getOutages()
+            return
+        }
+        
         isSearching = true
-        filteredOutages = outages.filter({ $0.Mahalleler.lowercased().contains(query.lowercased())})
-        updateData(on: filteredOutages)
+        viewModel.filteredOutages = viewModel.outages.filter({ $0.Mahalleler.lowercased().contains(query.lowercased())})
+        updateData(on: viewModel.filteredOutages)
+        
     }
     
     
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
         isSearching = false
-        //updateData(on: outages)
         getOutages()
     }
     

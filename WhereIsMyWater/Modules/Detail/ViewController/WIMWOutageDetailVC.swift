@@ -77,11 +77,9 @@ class WIMWOutageDetailVC: UIViewController {
         stackView.isLayoutMarginsRelativeArrangement = true
         stackView.layoutMargins = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
         stackView.axis = .vertical
-        stackView.backgroundColor = .systemBackground
+        stackView.backgroundColor = .tertiarySystemGroupedBackground
         stackView.distribution = .fillProportionally
         stackView.layer.cornerRadius = 5
-        stackView.layer.borderWidth = 2
-        stackView.layer.borderColor = UIColor.black.cgColor
         stackView.clipsToBounds = true
         stackView.addArrangedSubview(dateLabel)
         stackView.addArrangedSubview(descriptionLabel)
@@ -104,12 +102,12 @@ class WIMWOutageDetailVC: UIViewController {
         let padding: CGFloat = 16
 
         NSLayoutConstraint.activate([
-            collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: padding),
+            collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: padding / 2),
             collectionView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: padding),
             collectionView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -padding),
-            collectionView.heightAnchor.constraint(equalToConstant: 60),
+            collectionView.heightAnchor.constraint(equalToConstant: 40),
             
-            stackView.topAnchor.constraint(equalTo: collectionView.bottomAnchor, constant: padding),
+            stackView.topAnchor.constraint(equalTo: collectionView.bottomAnchor, constant: padding / 2),
             stackView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: padding),
             stackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -padding),
         ])

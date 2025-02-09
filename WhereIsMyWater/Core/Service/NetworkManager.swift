@@ -13,7 +13,7 @@ class NetworkManager {
     private let waterOutagesURL = "https://openapi.izmir.bel.tr/api/izsu/arizakaynaklisukesintileri"
     
     
-    func getWaterOutages(completion: @escaping(Result<[Outage],Error>) -> Void) {
+    func getOutages(completion: @escaping(Result<[Outage],Error>) -> Void) {
         
         guard let url = URL(string: waterOutagesURL) else { return }
         
